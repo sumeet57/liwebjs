@@ -1,0 +1,15 @@
+{
+  "name": "liwebjs-client",
+  "version": "0.0.1",
+  "description": "LiWebJS client SDK",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest"
+  },
+  "license": "MIT"
+}
