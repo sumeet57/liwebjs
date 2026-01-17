@@ -13,8 +13,8 @@ applications with clean and predictable patterns.
 🚧 Pre-alpha — API not stable yet.
 
 ## Roadmap
-- [✅] Core socket wrapper
-- [✅] Core basic ws functionality(eastablish conn & basic events)
+- [x] Core socket wrapper
+- [x] Core basic ws functionality(eastablish conn & basic events)
 - [ ] Room utilities
 - [ ] Event helpers
 - [ ] Examples
