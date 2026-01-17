@@ -9,7 +9,12 @@
     "test": "npm run test -ws"
   },
   "devDependencies": {
+    "@types/node": "^25.0.9",
+    "@types/ws": "^8.18.1",
     "typescript": "^5.9.3",
     "vitest": "^4.0.17"
+  },
+  "dependencies": {
+    "ws": "^8.19.0"
   }
 }
