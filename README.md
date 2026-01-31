@@ -45,7 +45,7 @@ Higher-level features (rooms, state, presence) are coming next.
 
 ## 📦 Installation
 
-Server:
+Server (coming soon):
 npm install liwebjs
 
 Client (coming soon):
