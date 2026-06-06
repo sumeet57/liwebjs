@@ -31,6 +31,9 @@
   ],
   "author": "Sumeet Umbalkar",
   "license": "MIT",
+  "dependencies": {
+    "ws": "^8.19.0"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/sumeet57/liwebjs.git"
