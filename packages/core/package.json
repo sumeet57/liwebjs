@@ -34,6 +34,11 @@
   "dependencies": {
     "ws": "^8.19.0"
   },
+  "devDependencies": {
+    "@types/ws": "^8.5.3",
+    "typescript": "^5.0.4",
+    "vitest": "^0.34.1"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/sumeet57/liwebjs.git"
