@@ -1,14 +1,17 @@
+
 <div align="center">
 
 # LiWebJS
 
-**Realtime backend framework for Node.js**
+**Lightweight realtime backend framework for Node.js**
 
-Structured WebSocket abstraction with channels, rooms, shared state, and authentication built-in.
+Channels, rooms, shared state, auth, heartbeat, and presence — all built in.
 
 [![npm version](https://img.shields.io/npm/v/liwebjs)](https://www.npmjs.com/package/liwebjs)
 [![license](https://img.shields.io/npm/l/liwebjs)](LICENSE)
 [![tests](https://img.shields.io/github/actions/workflow/status/sumeet57/liwebjs/ci.yml?label=tests)](https://github.com/sumeet57/liwebjs/actions)
+
+**[Documentation](https://liwebjs.sumeet.app) · [npm](https://www.npmjs.com/package/liwebjs) · [Examples](examples/chat)**
 
 </div>
 
@@ -16,41 +19,38 @@ Structured WebSocket abstraction with channels, rooms, shared state, and authent
 
 ## Why LiWebJS?
 
-Most realtime apps end up re-implementing the same primitives:
+Every realtime project ends up re-implementing the same patterns from scratch.
 
-* Connection lifecycle management
-* Room / channel systems
-* State synchronization
-* Authentication & heartbeats
-
-LiWebJS promotes these to first-class concepts so you write application logic — not infrastructure.
-
-| Raw WebSocket          | LiWebJS                            |
-| ---------------------- | ---------------------------------- |
+| Raw WebSocket | LiWebJS |
+|---|---|
 | `ws.on("message", fn)` | `liweb.handle("chat:message", fn)` |
-| Manual room tracking   | `channel("chat").room("general")`  |
-| Custom auth handling   | Built-in auth config               |
-| Manual state sync      | `room.state.*` APIs                |
+| Manual room tracking | `channel("chat").room("general")` |
+| Custom auth handling | `options.auth = { secret: "..." }` |
+| Manual state sync | `room.state.set / get / push / patch` |
+| Manual heartbeat | `options.ping = { pingInterval: 25000 }` |
+| Manual presence tracking | `room.presence.online() / lastSeen()` |
+
+LiWebJS promotes these to first-class framework features so you write application logic — not infrastructure.
 
 ---
 
 ## Packages
 
-| Package          | Description                  |
-| ---------------- | ---------------------------- |
-| `liwebjs`        | Server-side framework        |
-| `liwebjs-client` | Browser WebSocket client SDK |
+| Package | Description | npm |
+|---|---|---|
+| `liwebjs` | Server-side Node.js framework | [![npm](https://img.shields.io/npm/v/liwebjs)](https://www.npmjs.com/package/liwebjs) |
+| `liwebjs-client` | Browser WebSocket client SDK | [![npm](https://img.shields.io/npm/v/liwebjs-client)](https://www.npmjs.com/package/liwebjs-client) |
 
 ---
 
 ## Quick Start
 
-### Server
-
 ```bash
 npm install liwebjs
+npm install liwebjs-client
 ```
 
+**Server:**
 ```ts
 import http from "http";
 import { createLiWebServer } from "liwebjs";
@@ -61,7 +61,7 @@ const liweb = createLiWebServer(httpServer);
 const general = liweb.channel("chat").room("general");
 
 liweb.on("connection", (ctx) => {
-  general.join(ctx.connection);
+  general.join(ctx.connection, ctx.user);
   ctx.send("welcome", { id: ctx.connection.id });
 });
 
@@ -76,138 +76,67 @@ liweb.on("disconnect", (ctx) => {
 httpServer.listen(3001);
 ```
 
----
-
-### Client
-
-```bash
-npm install liwebjs-client
-```
-
+**Client:**
 ```ts
 import { createLiWebClient } from "liwebjs-client";
 
 const client = createLiWebClient("ws://localhost:3001");
 
 client.on("connect", () => console.log("connected"));
-
-client.handle("message", (payload) => {
-  console.log(payload);
-});
-
+client.handle("message", (payload) => console.log(payload));
 client.emit("message", { text: "hello world" });
 ```
 
 ---
 
-## Core Features
+## Features
 
-| Feature        | API                               |
-| -------------- | --------------------------------- |
-| Event routing  | `liweb.handle(event, fn)`         |
-| Channels       | `liweb.channel(name)`             |
-| Rooms          | `channel.room(key)`               |
-| Broadcasting   | `room.emit / emitExcept / emitTo` |
-| Shared state   | `room.state.*`                    |
-| Authentication | `options.auth`                    |
-| Heartbeat      | `options.ping`                    |
-| Auto-reconnect | Client SDK                        |
+| Feature | Status |
+|---|---|
+| Event routing | ✅ |
+| Channels + Rooms | ✅ |
+| Shared state engine | ✅ |
+| Secret-based auth | ✅ |
+| Ping/Pong heartbeat | ✅ |
+| Presence engine | ✅ |
+| Browser client SDK + auto-reconnect | ✅ |
+| TypeScript-first | ✅ |
 
 ---
 
-## Example
+## Documentation
 
-A complete chat application is available:
+Full API reference, guides, and examples:
+
+**👉 [liwebjs.sumeet.app](https://liwebjs.sumeet.app)**
+
+---
+
+## Example App
+
+Full-stack chat app — Express + React + Vite:
 
 ```bash
-# Server
-cd examples/chat/server
-npm install
-npm run dev
+# Terminal 1
+cd examples/chat/server && npm install && npm run dev
 
-# Client
-cd examples/chat/client
-npm install
-npm run dev
+# Terminal 2
+cd examples/chat/client && npm install && npm run dev
 ```
 
-Open: http://localhost:5173
+Open `http://localhost:5173` in multiple tabs.
 
 ---
 
-## API Overview
-
-### Server
-
-```ts
-createLiWebServer(httpServer, {
-  auth: { secret: "APP_SECRET", timeout: 5000 },
-  ping: { pingInterval: 25000, pingTimeout: 10000 },
-});
-
-liweb.on("connection" | "disconnect" | "auth:error", handler);
-
-liweb.handle(eventName, handler);
-
-const channel = liweb.channel(name);
-const room = channel.room(key);
-
-// Room control
-room.join(conn);
-room.leave(conn);
-room.has(conn);
-
-// Messaging
-room.emit(event, payload);
-room.emitExcept(connId, event, payload);
-room.emitTo(connId, event, payload);
-
-// State
-room.state.get();
-room.state.set();
-room.state.update();
-room.state.push();
-room.state.remove();
-room.state.increment();
-room.state.decrement();
-room.state.patch();
-room.state.snapshot();
-```
-
----
-
-### Client
-
-```ts
-createLiWebClient(url, {
-  reconnect: true,
-  reconnectDelay: 2000,
-  auth: { secret, secure: { id, role } },
-});
-
-client.on("connect" | "disconnect", handler);
-
-client.handle(eventName, handler);
-
-client.emit(eventName, payload);
-
-client.auth({ secret, secure });
-
-client.disconnect();
-```
-
----
-
-## Project Structure
+## Roadmap
 
 ```
-liwebjs/
-├── packages/
-│   ├── core/        # Server framework
-│   └── client/      # Browser SDK
-├── examples/
-│   └── chat/        # Full-stack example
-└── DOCUMENTATION.md
+v0.0.1  ✅  Core framework — events, rooms, state, auth, heartbeat
+v0.0.2  ✅  npm publish + documentation
+v0.0.3  ✅  Presence Engine — online tracking, last seen, activity
+v0.0.4  🔜  Role-based authorization
+v1.0.0  🔜  Redis distributed state adapter
+Future  🔜  uWebSockets adapter, Edge runtime support
 ```
 
 ---
@@ -216,25 +145,24 @@ liwebjs/
 
 ```bash
 git clone https://github.com/sumeet57/liwebjs.git
-cd liwebjs
-npm install
+cd liwebjs && npm install
 
-# Run tests
 cd packages/core && npm test
 cd ../client && npm test
 ```
 
+See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 ---
 
 ## When NOT to Use LiWebJS
 
-* You need ultra-low latency at scale (consider raw ws or uWebSockets)
-* You already rely heavily on Socket.IO ecosystem
-* You don’t need structured realtime (simple pub/sub is enough)
+- You need ultra-low latency at massive scale — consider raw `ws` or `uWebSockets`
+- You already rely heavily on the Socket.IO ecosystem
+- You need multi-server scaling right now — Redis adapter is planned for v1.0
 
 ---
 
 ## License
 
-MIT © Sumeet Umbalkar
+MIT © [Sumeet Umbalkar](https://github.com/sumeet57)
